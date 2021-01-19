@@ -96,7 +96,10 @@ router.post("/update-chat/:id", async (ctx, next) => {
   var id = ctx.params.id;
   var message = body.message;
 
-  await chat.update({ message: message }, { where: { id: id } });
+  await chat.update(
+    { message: message, updated_at: new Date() },
+    { where: { id: id } }
+  );
 
   ctx.body = { message: "Cập nhật tin nhắn thành công" };
   ctx.status = 200;

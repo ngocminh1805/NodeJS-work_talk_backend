@@ -32,15 +32,21 @@ router.get("/chat-room/:page/:limit", async (ctx, next) => {
 
   var chat_room_list = await chat_room.findAll({
     attributes: ["id", "title", "status", "avatar", "type"],
+
     include: [
       {
         //@ts-ignore
         model: chat,
-
-        attributes: ["message", "message_type", "message_status"],
+        attributes: [
+          "message",
+          "message_type",
+          "message_status",
+          "user_id",
+          "created_at",
+        ],
         order: [["created_at", "DESC"]],
         separate: true,
-        // limit: 5,
+        limit: 1,
         // subQuery: false,
         include: [
           {
@@ -52,10 +58,17 @@ router.get("/chat-room/:page/:limit", async (ctx, next) => {
       },
     ],
 
-    order: [["created_at", "DESC"]],
-    // offset: offset,
-    // limit: limit,
+    // order: [["created_at", "DESC"]],
+
+    order: [
+      //@ts-ignore
+      [{ chat_room }, { chat }, "created_at", "DESC"],
+    ],
+    offset: offset,
+    limit: limit,
   });
+
+  // console.log("List_Chat_room", list_chat_room);
 
   ctx.body = { result: chat_room_list, count: data.count, total_pages: pages };
   ctx.status = 200;
@@ -66,28 +79,27 @@ router.get("/chat-room/:page/:limit", async (ctx, next) => {
 
 router.get("/chat-room/:id", async (ctx, next) => {
   console.log("test chat room id ...");
-  var chatroom = await chat_room.findOne({
+  var chatroom = await chat_room.findAll({
     where: { id: ctx.params.id },
-    attributes: [
-      "id",
-      "title",
-      "slogan",
-      "status",
-      "avatar",
-      "type",
-      "description",
-    ],
+    attributes: ["id", "title", "status", "avatar", "type"],
     include: [
       {
         //@ts-ignore
         model: chat,
-        attributes: ["message", "message_type", "message_status", "created_at"],
+        attributes: [
+          "message",
+          "message_type",
+          "message_status",
+          "user_id",
+          "created_at",
+        ],
         include: [
-          {
-            // model: attachment,
-          },
+          //@ts-ignore
+          { model: user, attributes: ["user_name", "avatar", "status"] },
         ],
         order: [["created_at", "DESC"]],
+        separate: true,
+        limit: 1,
       },
     ],
   });
@@ -198,6 +210,7 @@ router.post("/search-chat-room/:page", async (ctx, next) => {
         //@ts-ignore
         model: chat,
         attributes: ["message", "message_type", "message_status"],
+
         limit: 1,
         order: [["created_at", "DESC"]],
       },
